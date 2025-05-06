@@ -87,12 +87,58 @@ def build_n_gram(sequence, n):
 
     # Create outer dictionary
     outer_dict = {}
-
-    # Check how long the previous words tuple should be
-    previous_words = []
     
-    while previous_words.length != n-1:
-        previous_words.insert()
+    # Begin with the minimum amount of context words
+    prev_words = tuple(sequence[:n-1])
+    curr_word = None
+
+    # Loop through the sequence
+    for word in sequence:
+        # Set the current word
+        curr_word = word
+
+        # Skip if the current word is in previous words
+        if curr_word in prev_words:
+            continue
+        
+        # Check if the previous word is in the outer dictionary
+        if prev_words in outer_dict:
+            # Get the inner dictionary (value of the previous word)
+            inner_dict = outer_dict[prev_words]
+
+            # Check if the current word is in the inner dictionary
+            if curr_word in inner_dict:
+                # Increment that value
+                inner_dict[curr_word] += 1
+            else:
+                # Add the current word to the inner dictionary
+                inner_dict[curr_word] = 1
+        else:
+            # Add the previous word to the outer dictionary and make the value an empty dictionary
+            outer_dict[prev_words] = {}
+            inner_dict = outer_dict[prev_words]
+
+            # Add the current word to the empty dictionary
+            inner_dict[curr_word] = 1
+
+        # Add the current word to the previous words tuple and remove the first value
+        previous_words_list = []
+
+        first_value = True
+        for word in prev_words:
+            if first_value == True:
+                first_value = False
+                continue
+        
+            previous_words_list.append(word)
+        
+        previous_words_list.append(curr_word)
+
+        prev_words = tuple(previous_words_list)
+
+    # Return the outer dictionary
+    return outer_dict
+
 
 
 
@@ -156,14 +202,14 @@ if __name__ == '__main__':
     '''
 
     # Task 1.2 test code
+    '''
     model = build_bigram(sequence[:20])
     print(model)
+    '''
 
     # Task 1.3 test code
-    '''
     model = build_n_gram(sequence[:20], 5)
     print(model)
-    '''
 
     # Task 2 test code
     '''
