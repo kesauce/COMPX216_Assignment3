@@ -89,7 +89,7 @@ def build_n_gram(sequence, n):
     outer_dict = {}
     
     # Begin with the minimum amount of context words
-    prev_words = tuple(sequence[:n-1])
+    prev_words = tuple(sequence[0:n-1])
     curr_word = None
 
     # Loop through the sequence
@@ -100,7 +100,7 @@ def build_n_gram(sequence, n):
         # Skip if the current word is in previous words
         if curr_word in prev_words:
             continue
-        
+
         # Check if the previous word is in the outer dictionary
         if prev_words in outer_dict:
             # Get the inner dictionary (value of the previous word)
@@ -146,7 +146,14 @@ def query_n_gram(model, sequence):
     # Task 2
     # Return a prediction as a dictionary.
     # Replace the line below with your code.
-    raise NotImplementedError
+    #raise NotImplementedError
+
+    # Check if the sequence is in the model
+    if sequence in model:
+        # Return the inner dictionary if so
+        return model[sequence]
+    else:
+        return None
 
 def blended_probabilities(preds, factor=0.8):
     blended_probs = {}
@@ -196,25 +203,19 @@ if __name__ == '__main__':
     sequence = tokenise('assignment3corpus.txt')
 
     # Task 1.1 test code
-    '''
     model = build_unigram(sequence[:20])
-    print(model)
-    '''
+    #print(model)
 
     # Task 1.2 test code
-    '''
     model = build_bigram(sequence[:20])
-    print(model)
-    '''
+    #print(model)
 
     # Task 1.3 test code
     model = build_n_gram(sequence[:20], 5)
-    print(model)
+    #print(model)
 
     # Task 2 test code
-    '''
     print(query_n_gram(model, tuple(sequence[:4])))
-    '''
 
     # Task 3 test code
     '''
