@@ -177,109 +177,58 @@ def blended_probabilities(preds, factor=0.8):
     return {k: v / weight_sum for k, v in blended_probs.items()}
 
 def sample(sequence, models):
-    # # Task 3
-    # # Return a token sampled from blended predictions.
-    
-    # # Make a list to store each prediction from each model
-    # predictions_list = []
-
-    # # Loop through each of the models
-    # for model in models:
-    #     # Loop through the keys of the dictionary and store in a list the length of each key
-    #     key_list = []
-    #     for key in model:
-    #         key_list.append(len(key))
-
-    #     # Find the max length in the key list
-    #     if key_list:
-    #         n_gram = max(key_list) + 1
-    #     else:
-    #         n_gram = 1
-
-
-    #     # Check whether the sequence is initialising
-    #     if len(sequence) == 0:
-    #         predictions_list.append(query_n_gram(model, ()))
-        
-    #     # Check whether the sequence has enough context for this specific model
-    #     elif len(sequence) >= n_gram - 1:
-    #         # Only grab the context from the sequence that's needed for the model
-    #         if (n_gram == 1):
-    #             context = ()
-    #         else:
-    #             context = tuple(sequence[-(n_gram - 1):])
-
-    #         # Ensure that the context exists in the dictionary
-    #         if query_n_gram(model, context) is not None:
-    #             predictions_list.append(query_n_gram(model, context))
-    #     else:
-    #         continue
-
-    # # If prediction list is empty then return none
-    # if not predictions_list:
-    #     return None
-
-    # # Grab the dictionary of blended probabilities
-    # blended_predictions = blended_probabilities(predictions_list)
-
-    # # Grab the list of keys and list of values
-    # blended_keys_list = list(blended_predictions.keys())
-    # blended_values_list = list(blended_predictions.values())
-
-    # #Randomly pick a word based on probability
-    # random_word = random.choices(blended_keys_list, weights = blended_values_list, k = 1)[0]
-    # return random_word
-
-      # Task 3
+    # Task 3
     # Return a token sampled from blended predictions.
-    # Replace the line below with your code.
-
-    inner_dicts = []
-
-    models_used_list = []
-
-
-    #put all models in to models used list if current sequence length is more than 9
-    if len(sequence) >= 9:
-        models_used_list = models
-    #use the models from the first one to the length of sequence + 1 
-    else:
-        models_used_list = models[-(len(sequence) + 1):]
     
+    # Make a list to store each prediction from each model
+    predictions_list = []
 
-    #counter for how many context words we need at the moment
-    counter = len(models_used_list) - 1
-    
-    for model in models_used_list:
+    # Loop through each of the models
+    for model in models:
+        # Loop through the keys of the dictionary and store in a list the length of each key
+        key_list = []
+        for key in model:
+            key_list.append(len(key))
+
+        # Find the max length in the key list
+        if key_list:
+            n_gram = max(key_list) + 1
+        else:
+            n_gram = 1
+
+
+        # Check whether the sequence is initialising
+        if len(sequence) == 0:
+            predictions_list.append(query_n_gram(model, ()))
         
-        #if we have context words, grab counter amount from the end of the sequence
-        # if(counter > 0):
-        #     context_words = tuple(sequence[-(counter):])
-        # else:
-        #     context_words = ()
+        # Check whether the sequence has enough context for this specific model
+        elif len(sequence) >= n_gram - 1:
+            # Only grab the context from the sequence that's needed for the model
+            if (n_gram == 1):
+                context = ()
+            else:
+                context = tuple(sequence[-(n_gram - 1):])
 
-        context_words = tuple(sequence[-(counter):])
-        
-        #grabs the inner dictionary 
-        #print(context_words)
-        inner = query_n_gram(model, context_words)
-        
-        #if current inner dict has those context words, add to all the inner dicts list
-        if inner is not None:
-            inner_dicts.append(inner)
-            
-        # -1 from counter to use all the other n grams
-        counter -= 1
+            # Ensure that the context exists in the dictionary
+            if query_n_gram(model, context) is not None:
+                predictions_list.append(query_n_gram(model, context))
+        else:
+            continue
 
-    #gets the blended probabilties and puts into a dictionary
-    blended_prob_dict = blended_probabilities(inner_dicts)
+    # If prediction list is empty then return none
+    if not predictions_list:
+        return None
 
-    #returns the a random word
-    #key = words avalible to choose from, values = weight of each word, 1 = choosing one word
-    # random_word = random.choices(list(blended_prob_dict.keys()), weights=(list)(blended_prob_dict.values()), k = 1)[0]
-    # while random_word == sequence[-1:]:
-    #     random_word = random.choices(list(blended_prob_dict.keys()), weights=(list)(blended_prob_dict.values()), k = 1)[0]
-    return random.choices(list(blended_prob_dict.keys()), weights=(list)(blended_prob_dict.values()), k = 1)[0]
+    # Grab the dictionary of blended probabilities
+    blended_predictions = blended_probabilities(predictions_list)
+
+    # Grab the list of keys and list of values
+    blended_keys_list = list(blended_predictions.keys())
+    blended_values_list = list(blended_predictions.values())
+
+    #Randomly pick a word based on probability
+    random_word = random.choices(blended_keys_list, weights = blended_values_list, k = 1)[0]
+    return random_word
 
     
 
@@ -291,79 +240,24 @@ def log_likelihood_ramp_up(sequence, models):
     # Initialise the log likelihood
     log_likelihood = 0.0
 
-    # # Loop through the words in the sequence
-    # for i in range(len(sequence)):
-    #     # Loop through the models to be used on the word
-    #     for model in models:
-    #         # Loop through the keys of the dictionary and store in a list the length of each key
-    #         key_list = []
-    #         for key in model:
-    #             key_list.append(len(key))
-
-    #         # Find the max length in the key list
-    #         n_gram = max(key_list) + 1
-
-    #         # Set the current word
-    #         curr_word = sequence[i]
-
-    #         # Check if the current has enough context words for that specific model
-    #         if i >= n_gram - 1:
-    #             # Grab the previous words in a tuple
-    #             prev_words = tuple(sequence[i - (n_gram - 1) : i]) 
-
-    #             # Find the inner dictionary of the context words
-    #             dictionary = query_n_gram(model, prev_words)
-
-    #             # Ensuring dictionary is not none
-    #             if dictionary is not None:
-    #                 # Find the total frequency of the context occuring
-    #                 frequency_list = list(dictionary.values())
-    #                 sum_frequency = sum(frequency_list)
-
-    #                 # Ensures the current word is in the dictionary
-    #                 if curr_word in dictionary:
-    #                     # Grab the frequency of the current word, assuming previous words as context then log it
-    #                     curr_word_frequency = dictionary[curr_word]
-    #                     prob_of_curr_word = math.log(curr_word_frequency/sum_frequency)
-    #                     log_likelihood += prob_of_curr_word
-
-    #                     # Move to the next word
-    #                     break
-
-    #             # Move to the next model 
-    #             continue
-            
-    #         # Check if we are at the unigram
-    #         elif n_gram == 1:
-    #             # Find the inner dictionary of the context words
-    #             dictionary = query_n_gram(model, ())
-
-    #             # Ensuring dictionary is not none
-    #             if dictionary is not None:
-    #                 # Find the total frequency of the context occuring
-    #                 frequency_list = list(dictionary.values())
-    #                 sum_frequency = sum(frequency_list)
-
-    #                 # Ensures the current word is in the dictionary
-    #                 if curr_word in dictionary:
-    #                     # Grab the frequency of the current word, assuming previous words as context then log it
-    #                     curr_word_frequency = dictionary[curr_word]
-    #                     prob_of_curr_word = math.log(curr_word_frequency/sum_frequency)
-    #                     log_likelihood += prob_of_curr_word
-
-    #                     # Move to the next word
-    #                     break
-    #         else:
-    #             # Move to the next model
-    #             continue
-
     # Loop through the words in the sequence
     for i in range(len(sequence)):
         # Get the current word
         curr_word = sequence[i]
 
+        # If the sequence is empty
+        if i == 0:
+            # Grab the unigram
+            model = models[-1]
+
+            # Grab the previous words in a tuple
+            prev_words = ()
+
+            # Find the inner dictionary of the context words
+            dictionary = query_n_gram(model, prev_words)
+
         # If the sequence has a context that is less than the amount of models available
-        if i < len(models):
+        elif i < len(models):
             # Grab the model needed
             model_index = -(i + 1)
             model = models[model_index]
@@ -376,41 +270,31 @@ def log_likelihood_ramp_up(sequence, models):
 
             # Find the inner dictionary of the context words
             dictionary = query_n_gram(model, prev_words)
-
-            # Ensuring dictionary is not none
-            if dictionary is not None:
-                # Find the total frequency of the context occuring
-                frequency_list = list(dictionary.values())
-                sum_frequency = sum(frequency_list)
-
-                # Ensures the current word is in the dictionary
-                if curr_word in dictionary:
-                    # Grab the frequency of the current word, assuming previous words as context then log it
-                    curr_word_frequency = dictionary[curr_word]
-                    prob_of_curr_word = math.log(curr_word_frequency/sum_frequency)
-                    log_likelihood += prob_of_curr_word
+    
         else:
             # Grab the 10 gram
             model = models[0]
 
             # Grab the previous words in a tuple
-            prev_words = tuple(sequence[i - 9:i])
+            prev_words = tuple(sequence[i - (len(models) - 1):i])
 
             # Find the inner dictionary of the context words
             dictionary = query_n_gram(model, prev_words)
+        
+        # Ensuring dictionary is not none
+        if dictionary is not None:
+            # Find the total frequency of the context occuring
+            frequency_list = list(dictionary.values())
+            sum_frequency = sum(frequency_list)
 
-            # Ensuring dictionary is not none
-            if dictionary is not None:
-                # Find the total frequency of the context occuring
-                frequency_list = list(dictionary.values())
-                sum_frequency = sum(frequency_list)
-
-                # Ensures the current word is in the dictionary
-                if curr_word in dictionary:
-                    # Grab the frequency of the current word, assuming previous words as context then log it
-                    curr_word_frequency = dictionary[curr_word]
-                    prob_of_curr_word = math.log(curr_word_frequency/sum_frequency)
-                    log_likelihood += prob_of_curr_word
+            # Ensures the current word is in the dictionary
+            if curr_word in dictionary:
+                # Grab the frequency of the current word, assuming previous words as context then log it
+                curr_word_frequency = dictionary[curr_word]
+                prob_of_curr_word = math.log(curr_word_frequency/sum_frequency)
+                log_likelihood += prob_of_curr_word
+        else:
+            return -math.inf
 
     return log_likelihood
 
@@ -458,19 +342,22 @@ def log_likelihood_blended(sequence, models):
         # Blend each of the predictions
         blended_predictions = blended_probabilities(predictions_list)
 
-        # Find the total frequency of the context occuring
-        frequency_list = list(blended_predictions.values())
-        sum_frequency = sum(frequency_list)
+        if curr_word in blended_predictions:
+            # Find the total frequency of the context occuring
+            frequency_list = list(blended_predictions.values())
+            sum_frequency = sum(frequency_list)
 
-        # Find the frequency of the current word and probability
-        curr_word_frequency = blended_predictions[curr_word]
-        curr_word_probability = (curr_word_frequency/sum_frequency)
+            # Find the frequency of the current word and probability
+            curr_word_frequency = blended_predictions[curr_word]
+            curr_word_probability = (curr_word_frequency/sum_frequency)
 
-        log_blended_predictions = math.log(curr_word_probability)
+            log_blended_predictions = math.log(curr_word_probability)
 
-    	# Add it to the log
-        log_likelihood += log_blended_predictions
-    
+            # Add it to the log
+            log_likelihood += log_blended_predictions
+        else:
+            return -math.inf
+        
     # Return
     return log_likelihood
 
@@ -509,4 +396,4 @@ if __name__ == '__main__':
     
 
     # Task 4.2 test code
-    #print(log_likelihood_blended(sequence[:20], models))
+    print(log_likelihood_blended(sequence[:20], models))
