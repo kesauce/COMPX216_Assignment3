@@ -325,13 +325,13 @@ def log_likelihood_blended(sequence, models):
             n_gram = max(key_list) + 1
 
             # Check whether the sequence is initialising
-            if len(sequence) == 0:
+            if i == 0:
                 predictions_list.append(query_n_gram(model, ()))
             
             # Check whether the sequence has enough context for this specific model
-            elif len(sequence) >= n_gram - 1:
+            elif i >= (n_gram - 1):
                 # Only grab the context from the sequence that's needed for the model
-                context = tuple(sequence[-(n_gram - 1):])
+                context = tuple(sequence[i - (n_gram - 1):i])
 
                 # Ensure that the context exists in the dictionary
                 if query_n_gram(model, context) is not None:
@@ -339,24 +339,22 @@ def log_likelihood_blended(sequence, models):
             else:
                 continue
 
+        # Ensure that prediction list is not empty
+        if not predictions_list:
+            return -math.inf
+        
         # Blend each of the predictions
         blended_predictions = blended_probabilities(predictions_list)
 
         if curr_word in blended_predictions:
-            # Find the total frequency of the context occuring
-            frequency_list = list(blended_predictions.values())
-            sum_frequency = sum(frequency_list)
-
-            # Find the frequency of the current word and probability
-            curr_word_frequency = blended_predictions[curr_word]
-            curr_word_probability = (curr_word_frequency/sum_frequency)
-
+            curr_word_probability = blended_predictions[curr_word]
             log_blended_predictions = math.log(curr_word_probability)
 
             # Add it to the log
             log_likelihood += log_blended_predictions
         else:
             return -math.inf
+            
         
     # Return
     return log_likelihood
@@ -367,19 +365,19 @@ if __name__ == '__main__':
     sequence = tokenise('assignment3corpus.txt')
 
     # Task 1.1 test code
-    #model = build_unigram(sequence[:20])
-    #print(model)
+    model = build_unigram(sequence[:20])
+    print(model)
 
     # Task 1.2 test code
-    #model = build_bigram(sequence[:20])
-    #print(model)
+    model = build_bigram(sequence[:20])
+    print(model)
 
     # Task 1.3 test code
-    #model = build_n_gram(sequence[:20], 5)
-    #print(model)
+    model = build_n_gram(sequence[:20], 5)
+    print(model)
 
     # Task 2 test code
-    #print(query_n_gram(model, tuple(sequence[:4])))
+    print(query_n_gram(model, tuple(sequence[:4])))
 
     # Task 3 test code
     models = [build_n_gram(sequence, i) for i in range(10, 0, -1)]
@@ -392,7 +390,7 @@ if __name__ == '__main__':
 
     # Task 4.1 test code
 
-    #print(log_likelihood_ramp_up(sequence[:20], models))
+    print(log_likelihood_ramp_up(sequence[:20], models))
     
 
     # Task 4.2 test code
