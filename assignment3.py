@@ -83,59 +83,37 @@ def build_bigram(sequence):
 def build_n_gram(sequence, n):
     # Task 1.3
     # Return an n-gram model.
+    # Replace the line below with your code.
 
-    # Create outer dictionary
-    outer_dict = {}
-    
-    # Begin with the minimum amount of context words
-    prev_words = tuple(sequence[0:n-1])
-    curr_word = None
+    # Define outer dictionary
+    outer_dictionary = {}
 
     # Loop through the sequence
-    for word in sequence:
-        # Set the current word
-        curr_word = word
+    for i in range(len(sequence) - (n + 1)):
 
-        # Skip if the current word is in previous words
-        if curr_word in prev_words:
-            continue
+        # Grab the previous words and the current word
+        previous_words = tuple(sequence[i:i + n - 1])
+        current_word = sequence[i + n - 1]
 
-        # Check if the previous word is in the outer dictionary
-        if prev_words in outer_dict:
-            # Get the inner dictionary (value of the previous word)
-            inner_dict = outer_dict[prev_words]
+        # Check if the previous words in the outer dictionary
+        if previous_words not in outer_dictionary:
+            # Add the previous words to outer dictionary
+            outer_dictionary[previous_words] = {}
 
-            # Check if the current word is in the inner dictionary
-            if curr_word in inner_dict:
-                # Increment that value
-                inner_dict[curr_word] += 1
-            else:
-                # Add the current word to the inner dictionary
-                inner_dict[curr_word] = 1
-        else:
-            # Add the previous word to the outer dictionary and make the value an empty dictionary
-            outer_dict[prev_words] = {}
-            inner_dict = outer_dict[prev_words]
+            # Initialise the inner dictionary and set it to 0
+            outer_dictionary[previous_words][current_word] = 0
 
-            # Add the current word to the empty dictionary
-            inner_dict[curr_word] = 1
+        # Check if previous words is already in the inner dictionary
+        if current_word not in outer_dictionary[previous_words]:
 
-        # Add the current word to the previous words tuple and remove the first value
-        previous_words_list = []
+            # Initialise the inner dictionary and set it to 0
+            outer_dictionary[previous_words][current_word] = 0
 
-        first_value = True
-        for word in prev_words:
-            if first_value == True:
-                first_value = False
-                continue
-        
-            previous_words_list.append(word)
-        
-        previous_words_list.append(curr_word)
-        prev_words = tuple(previous_words_list)
+        # Increment the value
+        outer_dictionary[previous_words][current_word] += 1
 
-    # Return the outer dictionary
-    return outer_dict
+    # Return the outer dictonary    
+    return outer_dictionary
 
 
 
@@ -190,12 +168,13 @@ def sample(sequence, models):
         for key in model:
             key_list.append(len(key))
 
-        # Find the max length in the key list
-        if key_list:
-            n_gram = max(key_list) + 1
-        else:
+        # Find the min length in the key list
+        if min(key_list) == 0:
             n_gram = 1
-
+        elif min(key_list) == 1:
+            n_gram = 2
+        else:
+            n_gram = min(key_list) + 1
 
         # Check whether the sequence is initialising
         if len(sequence) == 0:
@@ -230,12 +209,13 @@ def sample(sequence, models):
     random_word = random.choices(blended_keys_list, weights = blended_values_list, k = 1)[0]
     return random_word
 
-    
-
 
 def log_likelihood_ramp_up(sequence, models):
     # Task 4.1
     # Return a log likelihood value of the sequence based on the models.
+
+    # Initialise the probability list
+    joint_probability_list = []
 
     # Initialise the log likelihood
     log_likelihood = 0.0
@@ -254,7 +234,7 @@ def log_likelihood_ramp_up(sequence, models):
             prev_words = ()
 
             # Find the inner dictionary of the context words
-            dictionary = query_n_gram(model, prev_words)
+            dictionary = model[()]
 
         # If the sequence has a context that is less than the amount of models available
         elif i < len(models):
@@ -263,10 +243,8 @@ def log_likelihood_ramp_up(sequence, models):
             model = models[model_index]
 
             # Grab the previous words in a tuple
-            if i == 0:
-                prev_words = tuple(sequence[i]) 
-            else:
-                prev_words = tuple(sequence[:i])
+            prev_words = tuple(sequence[:i])
+
 
             # Find the inner dictionary of the context words
             dictionary = query_n_gram(model, prev_words)
@@ -284,17 +262,25 @@ def log_likelihood_ramp_up(sequence, models):
         # Ensuring dictionary is not none
         if dictionary is not None:
             # Find the total frequency of the context occuring
-            frequency_list = list(dictionary.values())
-            sum_frequency = sum(frequency_list)
+            sum_frequency = 0.0
+            for value in dictionary.values():
+                sum_frequency += float(value)
 
             # Ensures the current word is in the dictionary
             if curr_word in dictionary:
                 # Grab the frequency of the current word, assuming previous words as context then log it
                 curr_word_frequency = dictionary[curr_word]
-                prob_of_curr_word = math.log(curr_word_frequency/sum_frequency)
-                log_likelihood += prob_of_curr_word
+                prob_of_curr_word = float(curr_word_frequency/sum_frequency)
+                joint_probability_list.append(prob_of_curr_word)
+            else:
+                return -math.inf
         else:
             return -math.inf
+
+    # Log each value in the joint probability list and add it to the log likelihood
+    for value in joint_probability_list:
+        logged_value = math.log(value)
+        log_likelihood += logged_value
 
     return log_likelihood
 
@@ -321,8 +307,13 @@ def log_likelihood_blended(sequence, models):
             for key in model:
                 key_list.append(len(key))
 
-            # Find the max length in the key list
-            n_gram = max(key_list) + 1
+            # Find the min length in the key list
+            if min(key_list) == 0:
+                n_gram = 1
+            elif min(key_list) == 1:
+                n_gram = 2
+            else:
+                n_gram = min(key_list) + 1
 
             # Check whether the sequence is initialising
             if i == 0:
